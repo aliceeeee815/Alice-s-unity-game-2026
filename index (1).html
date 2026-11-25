@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alice Chiu · Game Design Portfolio</title>
+<style>
+  :root { --face:#c9c9c9; --ink:#111; --blue:#2f78d6; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; }
+  body {
+    position:relative; overflow:hidden; color:var(--ink); background:#4a90d9;
+    font:12px/1.4 Tahoma, Verdana, "Microsoft JhengHei", "PingFang TC", sans-serif;
+  }
+  button { font:inherit; color:inherit; cursor:pointer; }
+  a { color:inherit; }
+
+  /* ===== 桌布：藍天＋綠色草原（純 CSS 繪製） ===== */
+  .wallpaper {
+    position:fixed; inset:0; z-index:0; overflow:hidden;
+    background:linear-gradient(#2a72d0 0%, #5aa5ea 45%, #a9d6f6 68%, #d4ebfa 78%);
+  }
+  .cloud { position:absolute; background:#fff; border-radius:50%; filter:blur(7px); opacity:.92; }
+  .cloud.c1 { width:260px; height:56px; top:16%; left:38%; }
+  .cloud.c2 { width:180px; height:40px; top:26%; left:62%; }
+  .cloud.c3 { width:300px; height:60px; top:12%; left:8%; opacity:.75; }
+  .cloud.c4 { width:140px; height:34px; top:34%; left:22%; opacity:.7; }
+  .hill { position:absolute; border-radius:50%; }
+  .hill.h1 { left:-30%; width:160%; height:95%; bottom:-58%; background:radial-gradient(ellipse at 45% 12%, #86d35a, #4a9a28 55%, #2f7a18); }
+  .hill.h2 { left:30%; width:120%; height:70%; bottom:-48%; background:radial-gradient(ellipse at 40% 10%, #5fb236, #2f7a18); }
+
+  /* ===== 上方選單列 ===== */
+  .menubar {
+    position:fixed; top:0; left:0; right:0; height:26px; z-index:1000;
+    display:flex; align-items:center; gap:18px; padding:0 14px;
+    background:linear-gradient(#f4f4f4, #cdcdcd); border-bottom:1px solid #6d6d6d;
+    box-shadow:0 1px 0 rgb(255 255 255 / 60%) inset; font-size:13px; white-space:nowrap; overflow:hidden;
+  }
+  .menubar .logo { color:#2a72d0; font-size:15px; }
+  .menubar .grow { margin-left:auto; }
+  @media (max-width:620px){ .menubar .opt { display:none; } }
+
+  /* ===== 桌面圖示 ===== */
+  .icons { position:fixed; top:44px; right:18px; z-index:5; display:flex; flex-direction:column; gap:16px; }
+  .icon {
+    width:88px; display:flex; flex-direction:column; align-items:center; gap:4px;
+    background:none; border:0; color:#fff; text-shadow:1px 1px 2px #000, 0 0 3px #000; font-size:12px;
+  }
+  .icon svg { width:46px; height:46px; filter:drop-shadow(1px 2px 1px rgb(0 0 0 / 40%)); }
+  .icon:hover span { background:#2a72d0; text-shadow:none; }
+  .icon span { padding:0 4px; }
+
+  /* ===== 視窗 ===== */
+  .desk { position:absolute; inset:0; z-index:2; }
+  .win {
+    position:absolute; display:flex; flex-direction:column;
+    background:var(--face); border:2px solid; border-color:#fff #2c2c2c #2c2c2c #fff;
+    box-shadow:3px 3px 0 rgb(0 0 0 / 35%), 10px 14px 28px rgb(0 0 0 / 28%);
+  }
+  .win.hidden { display:none; }
+  .titlebar {
+    display:flex; align-items:center; gap:8px; height:24px; padding:0 6px; flex:none;
+    cursor:grab; user-select:none; touch-action:none; border-bottom:1px solid #2c2c2c;
+    background:repeating-linear-gradient(#f1f1f1 0 2px, #8f8f8f 2px 3px);
+  }
+  .titlebar:active { cursor:grabbing; }
+  .titlebar .t { margin:0 auto; padding:0 12px; background:var(--face); font-weight:700; font-size:12px; }
+  .box {
+    width:20px; height:18px; padding:0; flex:none; background:var(--face);
+    display:grid; place-items:center; font-size:16px; font-weight:700; line-height:1; color:#111;
+    border:2px solid; border-color:#fff #333 #333 #fff;
+  }
+  .box:active { border-color:#333 #fff #fff #333; }
+  .box.close { font-size:18px; }
+  .box.close:hover { background:#e42b34; color:#fff; }
+  .box:not(.close):hover { background:#fff; }
+  .win-body { padding:14px; overflow:auto; }
+  .win.shaded .win-body { display:none; }
+
+  #win-games { left:40px; top:50px; width:min(960px, calc(100vw - 190px)); max-height:calc(100vh - 150px); }
+  #win-play  { left:110px; top:90px; width:min(700px, calc(100vw - 220px)); max-height:calc(100vh - 150px); }
+  #win-about { left:180px; top:110px; width:min(520px, calc(100vw - 240px)); max-height:calc(100vh - 150px); }
+
+  .btn {
+    display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:22px; padding:0 7px;
+    background:var(--face); border:2px solid; border-color:#fff #444 #444 #fff; font-size:11px;
+  }
+  button.btn:active { border-color:#444 #fff #fff #444; }
+
+  /* ===== 視窗內文字 ===== */
+  .intro { margin-bottom:16px; padding:12px 14px; background:#fff; border:2px solid; border-color:#444 #fff #fff #444; }
+  .intro .kicker { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#666; }
+  .intro h1 { font-size:24px; line-height:1.2; margin:4px 0 6px; }
+  .intro h1 span { color:var(--blue); }
+  .intro p { color:#333; line-height:1.6; }
+
+  /* ===== 作品＝音樂播放器小卡 ===== */
+  .cards { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; }
+  .card { width:290px; }
+  .player { background:var(--face); border:2px solid; border-color:#fff #3a3a3a #3a3a3a #fff; box-shadow:0 0 0 1px #1c1c1c, 4px 4px 0 rgb(0 0 0 / 30%); }
+  .ph { position:relative; height:24px; padding:0 10px; display:flex; align-items:center; background:#232323; color:#fff; font-weight:700; letter-spacing:.04em; }
+  .ph::after { content:""; position:absolute; top:0; right:0; width:36px; height:15px; background:#e42b34; border-bottom-left-radius:12px; }
+  .pb { display:grid; grid-template-columns:132px 1fr; gap:8px 12px; padding:10px 12px 12px; }
+  .art {
+    position:relative; width:132px; height:132px; padding:0; overflow:hidden; background:#0a0618;
+    border:2px solid; border-color:#444 #fff #fff #444;
+  }
+  .art img { width:100%; height:100%; object-fit:cover; display:block; }
+  .art:hover { outline:2px solid var(--blue); }
+  .side { display:flex; flex-direction:column; gap:7px; }
+  .row1 { display:flex; align-items:flex-start; gap:6px; }
+  .cd { width:40px; height:40px; flex:none; margin-top:2px; }
+  .vol { display:flex; flex-direction:column; gap:3px; }
+  .vbtn { width:26px; height:19px; display:grid; place-items:center; font-weight:700; background:var(--face); border:2px solid; border-color:#fff #444 #444 #fff; line-height:1; }
+  .vbar { margin-left:auto; width:6px; height:44px; background:#0c2b12; border:1px solid #444; position:relative; }
+  .vbar::after { content:""; position:absolute; left:0; right:0; bottom:0; height:62%; background:#3fbf5a; }
+  .tr { display:flex; gap:4px; }
+  .tr .btn.big { flex:1; }
+  .tr.small .btn { flex:1; min-width:0; padding:0; }
+  .heart.on { color:#d4202c; }
+  .fld { grid-column:1 / -1; display:grid; grid-template-columns:44px 1fr; align-items:center; gap:6px; }
+  .fld label { font-weight:700; }
+  .sel { position:relative; height:21px; padding:2px 6px; background:#fff; border:2px solid; border-color:#444 #fff #fff #444; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sel::after { content:"▼"; position:absolute; top:0; right:0; width:18px; height:100%; display:grid; place-items:center; font-size:8px; background:var(--face); border-left:1px solid #666; }
+  .prog { grid-column:1 / -1; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:8px; }
+  .track { position:relative; height:14px; background:#a7a7a7; border:2px solid; border-color:#444 #fff #fff #444; }
+  .track i { position:absolute; top:-3px; width:12px; height:16px; margin-left:-6px; background:var(--face); border:2px solid; border-color:#fff #333 #333 #fff; }
+  .cap { margin-top:10px; padding:0 2px; font-size:12px; color:#222; line-height:1.55; }
+
+  /* 小圖案（遊戲封面的替代圖，之後可換成你的截圖） */
+  .mark { position:absolute; left:50%; top:50%; width:230px; height:230px; margin:-115px 0 0 -115px; transform:scale(var(--s, .55)); }
+  .signal-orbit { position:absolute; inset:0; margin:auto; border:1px solid rgb(255 255 255 / 35%); border-radius:50%; }
+  .signal-orbit.o1 { width:180px; height:180px; }
+  .signal-orbit.o2 { width:120px; height:120px; border-style:dashed; animation:spin 18s linear infinite; }
+  .signal-orbit.o3 { width:220px; height:70px; transform:rotate(-28deg); }
+  .signal-core { position:absolute; inset:0; margin:auto; width:32px; height:32px; border-radius:50%; box-shadow:0 0 50px currentColor; }
+  .mark.afterlight { overflow:hidden; border-radius:50%; background:linear-gradient(#36233e, #f17859); }
+  .afterlight-sun { position:absolute; top:45px; right:46px; width:48px; height:48px; border-radius:50%; box-shadow:0 0 30px rgb(255 107 74 / 50%); }
+  .afterlight-land { position:absolute; right:-25%; bottom:-30%; left:-25%; height:65%; border-radius:50% 50% 0 0; }
+  .afterlight-land.l1 { background:#1a191d; transform:rotate(8deg); }
+  .afterlight-land.l2 { right:20%; bottom:-42%; left:-45%; background:#27242b; }
+  .afterlight-player { position:absolute; bottom:50px; left:100px; width:12px; height:25px; border-radius:8px 8px 3px 3px; background:#f7f3e8; box-shadow:0 0 15px rgb(255 255 255 / 50%); }
+  .mark.kingdom { transform:scale(var(--s, .55)) rotateX(58deg) rotateZ(45deg); transform-style:preserve-3d; }
+  .kingdom-tile { position:absolute; width:95px; height:95px; border:1px solid rgb(255 255 255 / 18%); background:#254238; box-shadow:inset 0 0 35px rgb(0 0 0 / 25%); }
+  .kingdom-tile.t1 { top:15px; left:15px; }
+  .kingdom-tile.t2 { top:115px; left:15px; }
+  .kingdom-tile.t3 { top:15px; left:115px; }
+  .kingdom-tower { position:absolute; top:56px; left:56px; z-index:3; width:0; height:0; border-right:30px solid transparent; border-bottom:100px solid; border-left:30px solid transparent; transform:rotateZ(-45deg) rotateX(-50deg); }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* ===== 試玩視窗 ===== */
+  .now { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .now .name { flex:1; padding:3px 8px; background:#fff; border:2px solid; border-color:#444 #fff #fff #444; font-weight:700; }
+  .stage { background:#080512; aspect-ratio:16 / 9; border:3px solid; border-color:#444 #fff #fff #444; overflow:hidden; }
+  .stage iframe { width:100%; height:100%; border:0; display:block; }
+  .placeholder { position:relative; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 18px; text-align:center; color:#fff; }
+  .placeholder .mark { --s:.7; position:relative; left:auto; top:auto; margin:-34px 0; flex:none; }
+  .placeholder .msg { position:relative; z-index:2; margin-top:22px; }
+  .ready { display:inline-block; margin-bottom:8px; padding:3px 8px; border:2px solid #55f6ff; color:#55f6ff; font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+  .placeholder h3 { font-size:15px; }
+  .placeholder p { margin:6px auto 0; max-width:380px; color:rgb(255 255 255 / 60%); line-height:1.55; }
+  .hint { margin-top:10px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; color:#333; }
+
+  /* ===== 關於我視窗 ===== */
+  .about p { margin-bottom:10px; line-height:1.65; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 12px; }
+  .chips span { padding:2px 9px; background:#fff; border:2px solid; border-color:#444 #fff #fff #444; }
+  .links { display:flex; flex-wrap:wrap; gap:8px; }
+  .links a { text-decoration:none; }
+
+  /* ===== Dock ===== */
+  .dock {
+    position:fixed; bottom:10px; left:50%; transform:translateX(-50%); z-index:900;
+    display:flex; align-items:flex-end; gap:12px; padding:8px 16px; border-radius:18px;
+    background:rgb(255 255 255 / 32%); border:1px solid rgb(255 255 255 / 75%); backdrop-filter:blur(8px);
+    box-shadow:0 6px 18px rgb(0 0 0 / 25%);
+  }
+  .dock button, .dock a { width:48px; height:48px; padding:0; background:none; border:0; transition:transform .15s; }
+  .dock button:hover, .dock a:hover { transform:translateY(-8px) scale(1.2); }
+  .dock svg { width:100%; height:100%; filter:drop-shadow(0 2px 2px rgb(0 0 0 / 35%)); }
+
+  /* ===== 手機版：視窗改成直向排列 ===== */
+  @media (max-width:860px) {
+    body { overflow:auto; }
+    .desk { position:relative; inset:auto; padding:40px 10px 100px; }
+    .win { position:relative !important; left:auto !important; top:auto !important; width:auto !important; max-height:none !important; margin-bottom:16px; }
+    .titlebar { cursor:default; }
+    .icons { display:none; }
+    .dock { gap:8px; padding:6px 12px; }
+    .dock button, .dock a { width:42px; height:42px; }
+    .card { width:100%; max-width:340px; }
+  }
+  @media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+
+<!-- 小圖示庫 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-folder" viewBox="0 0 48 48"><path d="M3 11h15l4 5h23v27H3z" fill="#e8b92e" stroke="#7a5a08" stroke-width="2" stroke-linejoin="round"/><path d="M3 20h42v23H3z" fill="#fbd95b" stroke="#7a5a08" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-cd" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21" fill="#e2c35a" stroke="#6b5a1a" stroke-width="2"/><circle cx="24" cy="24" r="14" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="3"/><circle cx="24" cy="24" r="6" fill="#d8d8d8" stroke="#6b5a1a" stroke-width="2"/><circle cx="24" cy="24" r="2" fill="#6b5a1a"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 48 48"><path d="M10 4h20l10 10v30H10z" fill="#fff" stroke="#444" stroke-width="2" stroke-linejoin="round"/><path d="M30 4v10h10" fill="#ddd" stroke="#444" stroke-width="2" stroke-linejoin="round"/><path d="M16 22h18M16 28h18M16 34h12" stroke="#888" stroke-width="2"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#5aa5ea" stroke="#1d4f8f" stroke-width="2"/><ellipse cx="24" cy="24" rx="8" ry="20" fill="none" stroke="#fff" stroke-width="2"/><path d="M4 24h40M8 14h32M8 34h32" stroke="#fff" stroke-width="2"/></symbol>
+</svg>
+
+<div class="wallpaper" aria-hidden="true">
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div><div class="cloud c4"></div>
+  <div class="hill h1"></div><div class="hill h2"></div>
+</div>
+
+<!-- 選單列 -->
+<div class="menubar">
+  <span class="logo">◆</span>
+  <b>Alice Chiu</b>
+  <span class="opt">File</span><span class="opt">Edit</span><span class="opt">View</span><span class="opt">Go</span><span class="opt">Window</span><span class="opt">Help</span>
+  <span class="grow" id="clock"></span>
+</div>
+
+<!-- 桌面圖示 -->
+<nav class="icons" aria-label="Desktop">
+  <button class="icon" data-open="win-games"><svg><use href="#i-folder"/></svg><span>My Games</span></button>
+  <button class="icon" data-open="win-play"><svg><use href="#i-cd"/></svg><span>Player</span></button>
+  <button class="icon" data-open="win-about"><svg><use href="#i-doc"/></svg><span>About Me.txt</span></button>
+</nav>
+
+<main class="desk">
+
+  <!-- 視窗：作品 -->
+  <section class="win" id="win-games">
+    <div class="titlebar"><button class="box" data-shade aria-label="Collapse" title="Collapse">–</button><span class="t">My Games</span><button class="box close" data-close aria-label="Close" title="Close">×</button></div>
+    <div class="win-body">
+      <div class="intro">
+        <p class="kicker">Game design portfolio · Fall 2026</p>
+        <h1>Small games. <span>Big worlds.</span></h1>
+        <p>A collection of Unity games I designed, developed, and shipped this semester. Press play on any track to launch it.</p>
+      </div>
+      <div class="cards" id="cards"></div>
+    </div>
+  </section>
+
+  <!-- 視窗：試玩 -->
+  <section class="win hidden" id="win-play">
+    <div class="titlebar"><button class="box" data-shade aria-label="Collapse" title="Collapse">–</button><span class="t">Unity WebGL Player</span><button class="box close" data-close aria-label="Close" title="Close">×</button></div>
+    <div class="win-body">
+      <div class="now">
+        <button class="btn" data-step="-1">|◀</button>
+        <div class="name" id="playTitle"></div>
+        <button class="btn" data-step="1">▶|</button>
+      </div>
+      <div class="stage" id="stage"></div>
+      <div class="hint"><span id="controls"></span><span>Tip: click the game before using the keyboard</span></div>
+    </div>
+  </section>
+
+  <!-- 視窗：關於 -->
+  <section class="win hidden" id="win-about">
+    <div class="titlebar"><button class="box" data-shade aria-label="Collapse" title="Collapse">–</button><span class="t">About Me.txt</span><button class="box close" data-close aria-label="Close" title="Close">×</button></div>
+    <div class="win-body about">
+      <p><b>Hi, I'm Alice Chiu.</b></p>
+      <p>This semester, I learned that making games is equal parts code, craft, and curiosity. Each project pushed me into new territory: player controllers, state machines, procedural systems, level design, UI, sound, and the endless art of debugging.</p>
+      <p><b>Tools</b></p>
+      <div class="chips"><span>Unity</span><span>C#</span><span>Blender</span><span>ProBuilder</span><span>Git</span><span>FMOD</span></div>
+      <p><b>Find me</b></p>
+      <div class="links">
+        <a class="btn" href="https://github.com/aliceeeee815" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn" href="mailto:your@email.com">Email</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Dock -->
+<div class="dock">
+  <button data-open="win-games" title="My Games"><svg><use href="#i-folder"/></svg></button>
+  <button data-open="win-play" title="Player"><svg><use href="#i-cd"/></svg></button>
+  <button data-open="win-about" title="About Me"><svg><use href="#i-doc"/></svg></button>
+  <a href="https://github.com/aliceeeee815" target="_blank" rel="noopener" title="GitHub"><svg><use href="#i-globe"/></svg></a>
+</div>
+
+<script>
+  /* ================================================================
+     只需要改這裡：遊戲清單
+     - title / genre / description / controls：文字
+     - length：右下角的總時間（當作「大約遊玩時間」，例如 "12:00"）
+     - progress：進度條位置 0～1（純裝飾）
+     - cover：封面圖路徑，例如 "images/signal-lost.png"（留空就用內建小圖案）
+     - buildUrl：Unity WebGL 的路徑，例如 "games/signal-lost/index.html"
+     ================================================================ */
+  const games = [
+    { id:"signal-lost", title:"Signal Lost", genre:"Atmospheric puzzle",
+      description:"Restore a broken signal network while navigating a quiet, abandoned research station.",
+      controls:"WASD move · Mouse look · E interact", length:"3:25", progress:.45, accent:"#55f6ff", cover:"", buildUrl:"" },
+    { id:"afterlight", title:"Afterlight", genre:"2D platformer",
+      description:"Chase the last light through a collapsing world in this fast, precise platformer.",
+      controls:"A/D move · Space jump · Shift dash", length:"4:10", progress:.3, accent:"#ff4fa3", cover:"", buildUrl:"" },
+    { id:"tiny-kingdoms", title:"Tiny Kingdoms", genre:"Strategy sandbox",
+      description:"Build a tiny civilization, balance its resources, and help it survive the changing seasons.",
+      controls:"Mouse select · Scroll zoom · R rotate", length:"5:42", progress:.6, accent:"#ffe45c", cover:"", buildUrl:"" }
+  ];
+
+  function markHTML(g) {
+    if (g.id === "signal-lost") return `<div class="mark" aria-hidden="true"><span class="signal-orbit o1"></span><span class="signal-orbit o2"></span><span class="signal-orbit o3"></span><span class="signal-core" style="background:${g.accent};color:${g.accent}"></span></div>`;
+    if (g.id === "afterlight") return `<div class="mark afterlight" aria-hidden="true"><span class="afterlight-sun" style="background:${g.accent}"></span><span class="afterlight-land l1"></span><span class="afterlight-land l2"></span><span class="afterlight-player"></span></div>`;
+    return `<div class="mark kingdom" aria-hidden="true"><span class="kingdom-tile t1"></span><span class="kingdom-tile t2"></span><span class="kingdom-tile t3"></span><span class="kingdom-tower" style="border-bottom-color:${g.accent}"></span></div>`;
+  }
+  const artHTML = g => g.cover ? `<img src="${g.cover}" alt="${g.title} cover">` : markHTML(g);
+
+  /* 作品卡片（播放器樣式） */
+  document.getElementById("cards").innerHTML = games.map((g, i) => `
+    <div class="card">
+      <div class="player">
+        <div class="ph">${g.title}</div>
+        <div class="pb">
+          <button class="art" data-play="${i}" aria-label="Play ${g.title}">${artHTML(g)}</button>
+          <div class="side">
+            <div class="row1">
+              <svg class="cd" viewBox="0 0 48 48"><use href="#i-cd"/></svg>
+              <div class="vol"><span class="vbtn">+</span><span class="vbtn">−</span></div>
+              <span class="vbar"></span>
+            </div>
+            <div class="tr"><button class="btn big" data-play="${i}" aria-label="Play">▶ PLAY</button></div>
+            <div class="tr small">
+              <button class="btn" data-nav="${i}:-1" aria-label="Previous">|◀</button>
+              <span class="btn">◀◀</span><span class="btn">▶▶</span>
+              <button class="btn" data-nav="${i}:1" aria-label="Next">▶|</button>
+              <button class="btn heart" data-heart aria-label="Favorite">♥</button>
+            </div>
+          </div>
+          <div class="fld"><label>Genre:</label><div class="sel">${g.genre}</div></div>
+          <div class="fld"><label>Title:</label><div class="sel">${g.title}</div></div>
+          <div class="prog"><span>0:00</span><div class="track"><i style="left:${g.progress * 100}%"></i></div><span>${g.length}</span></div>
+        </div>
+      </div>
+      <p class="cap">${g.description}</p>
+    </div>`).join("");
+
+  /* 試玩視窗 */
+  let current = 0;
+  function renderPlay() {
+    const g = games[current];
+    document.getElementById("playTitle").textContent = `${g.title}  —  ${g.genre}`;
+    document.getElementById("controls").textContent = g.controls;
+    const stage = document.getElementById("stage");
+    stage.innerHTML = g.buildUrl
+      ? `<iframe src="${g.buildUrl}" title="Play ${g.title}" allowfullscreen></iframe>`
+      : `<div class="placeholder">${markHTML(g)}<div class="msg"><span class="ready">Ready player one</span><h3>Drop your Unity WebGL build here</h3><p>Export this game for WebGL, upload it to the games folder, then add its path as buildUrl.</p></div></div>`;
+  }
+  function openGame(i) { current = (i + games.length) % games.length; renderPlay(); openWin("win-play"); }
+
+  /* 視窗管理 */
+  const mobile = matchMedia("(max-width: 860px)");
+  let z = 20;
+  const wins = [...document.querySelectorAll(".win")];
+  const raise = w => { w.style.zIndex = ++z; };
+  function openWin(id) {
+    const w = document.getElementById(id);
+    if (id === "win-play" && !document.getElementById("stage").firstChild) renderPlay();
+    w.classList.remove("hidden", "shaded");
+    raise(w);
+    if (mobile.matches) w.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+  function initVisibility() {
+    if (mobile.matches) wins.forEach(w => { if (w.id !== "win-play") w.classList.remove("hidden"); });
+  }
+  initVisibility();
+  mobile.addEventListener("change", initVisibility);
+
+  document.addEventListener("click", e => {
+    const t = e.target;
+    let el;
+    if ((el = t.closest("[data-play]"))) return openGame(+el.dataset.play);
+    if ((el = t.closest("[data-nav]"))) { const [i, d] = el.dataset.nav.split(":").map(Number); return openGame(i + d); }
+    if ((el = t.closest("[data-step]"))) { current = (current + +el.dataset.step + games.length) % games.length; return renderPlay(); }
+    if ((el = t.closest("[data-open]"))) return openWin(el.dataset.open);
+    if ((el = t.closest("[data-heart]"))) return el.classList.toggle("on");
+    if ((el = t.closest("[data-close]"))) {
+      const w = el.closest(".win");
+      w.classList.add("hidden");
+      if (w.id === "win-play") document.getElementById("stage").innerHTML = "";  /* 關閉時停止遊戲與聲音 */
+      return;
+    }
+    if ((el = t.closest("[data-shade]"))) return el.closest(".win").classList.toggle("shaded");
+  });
+
+  /* 拖曳視窗 */
+  wins.forEach(w => {
+    const bar = w.querySelector(".titlebar");
+    w.addEventListener("pointerdown", () => raise(w));
+    bar.addEventListener("pointerdown", e => {
+      if (e.target.closest(".box") || mobile.matches) return;
+      const r = w.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+      bar.setPointerCapture(e.pointerId);
+      const move = ev => {
+        w.style.left = Math.max(80 - r.width, Math.min(innerWidth - 80, ev.clientX - dx)) + "px";
+        w.style.top  = Math.max(28, Math.min(innerHeight - 90, ev.clientY - dy)) + "px";
+      };
+      const up = () => { bar.removeEventListener("pointermove", move); bar.removeEventListener("pointerup", up); };
+      bar.addEventListener("pointermove", move);
+      bar.addEventListener("pointerup", up);
+    });
+  });
+
+  /* 時鐘 */
+  const clock = document.getElementById("clock");
+  const tick = () => { clock.textContent = new Date().toLocaleString("en-US", { weekday:"short", hour:"numeric", minute:"2-digit" }); };
+  tick(); setInterval(tick, 30000);
+
+  renderPlay();
+</script>
+</body>
+</html>
