@@ -159,7 +159,10 @@
   .ready { display:inline-block; margin-bottom:8px; padding:3px 8px; border:2px solid #55f6ff; color:#55f6ff; font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
   .placeholder h3 { font-size:15px; }
   .placeholder p { margin:6px auto 0; max-width:380px; color:rgb(255 255 255 / 60%); line-height:1.55; }
-  .hint { margin-top:10px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; color:#333; }
+  .hint { margin-top:10px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; color:#333; }
+  .hint .btn { text-decoration:none; margin-left:4px; }
+  .hint .btn[hidden] { display:none; }
+  .placeholder .btn.go { height:30px; margin-top:14px; padding:0 16px; font-size:13px; font-weight:700; text-decoration:none; color:#111; background:#ffe45c; }
 
   /* ===== 關於我視窗 ===== */
   .about p { margin-bottom:10px; line-height:1.65; }
@@ -248,7 +251,10 @@
         <button class="btn" data-step="1">▶|</button>
       </div>
       <div class="stage" id="stage"></div>
-      <div class="hint"><span id="controls"></span><span>Tip: click the game before using the keyboard</span></div>
+      <div class="hint">
+        <span id="controls"></span>
+        <span>Tip: click the game before using the keyboard · <a class="btn" id="openLink" href="#" target="_blank" rel="noopener" hidden>Open in new tab ↗</a></span>
+      </div>
     </div>
   </section>
 
@@ -263,7 +269,7 @@
       <p><b>Find me</b></p>
       <div class="links">
         <a class="btn" href="https://github.com/aliceeeee815" target="_blank" rel="noopener">GitHub</a>
-        <a class="btn" href="mailto:alicebububear@email.com">Email</a>
+        <a class="btn" href="mailto:your@email.com">Email</a>
       </div>
     </div>
   </section>
@@ -284,18 +290,21 @@
      - length：右下角的總時間（當作「大約遊玩時間」，例如 "12:00"）
      - progress：進度條位置 0～1（純裝飾）
      - cover：封面圖路徑，例如 "images/signal-lost.png"（留空就用內建小圖案）
-     - buildUrl：Unity WebGL 的路徑，例如 "games/signal-lost/index.html"
+     - link：Unity Play 的遊戲網址，例如 "https://play.unity.com/en/games/xxxx/signal-lost"
+       （會在試玩視窗顯示「Launch on Unity Play」按鈕，點了在新分頁開啟遊戲）
+     - buildUrl：想把遊戲直接嵌在視窗裡時才填（Unity Play 的嵌入網址，或你自己放在
+       GitHub 的路徑，例如 "games/signal-lost/index.html"）。填了 buildUrl 就會優先嵌入。
      ================================================================ */
   const games = [
     { id:"signal-lost", title:"Signal Lost", genre:"Atmospheric puzzle",
       description:"Restore a broken signal network while navigating a quiet, abandoned research station.",
-      controls:"WASD move · Mouse look · E interact", length:"3:25", progress:.45, accent:"#55f6ff", cover:"", buildUrl:"" },
+      controls:"WASD move · Mouse look · E interact", length:"3:25", progress:.45, accent:"#55f6ff", cover:"", buildUrl:"", link:"" },
     { id:"afterlight", title:"Afterlight", genre:"2D platformer",
       description:"Chase the last light through a collapsing world in this fast, precise platformer.",
-      controls:"A/D move · Space jump · Shift dash", length:"4:10", progress:.3, accent:"#ff4fa3", cover:"", buildUrl:"" },
+      controls:"A/D move · Space jump · Shift dash", length:"4:10", progress:.3, accent:"#ff4fa3", cover:"", buildUrl:"", link:"" },
     { id:"tiny-kingdoms", title:"Tiny Kingdoms", genre:"Strategy sandbox",
       description:"Build a tiny civilization, balance its resources, and help it survive the changing seasons.",
-      controls:"Mouse select · Scroll zoom · R rotate", length:"5:42", progress:.6, accent:"#ffe45c", cover:"", buildUrl:"" }
+      controls:"Mouse select · Scroll zoom · R rotate", length:"5:42", progress:.6, accent:"#ffe45c", cover:"", buildUrl:"", link:"" }
   ];
 
   function markHTML(g) {
@@ -341,9 +350,17 @@
     document.getElementById("playTitle").textContent = `${g.title}  —  ${g.genre}`;
     document.getElementById("controls").textContent = g.controls;
     const stage = document.getElementById("stage");
-    stage.innerHTML = g.buildUrl
-      ? `<iframe src="${g.buildUrl}" title="Play ${g.title}" allowfullscreen></iframe>`
-      : `<div class="placeholder">${markHTML(g)}<div class="msg"><span class="ready">Ready player one</span><h3>Drop your Unity WebGL build here</h3><p>Export this game for WebGL, upload it to the games folder, then add its path as buildUrl.</p></div></div>`;
+    const openLink = document.getElementById("openLink");
+    const url = g.link || g.buildUrl;
+    openLink.hidden = !url;
+    if (url) openLink.href = url;
+    if (g.buildUrl) {
+      stage.innerHTML = `<iframe src="${g.buildUrl}" title="Play ${g.title}" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe>`;
+    } else if (g.link) {
+      stage.innerHTML = `<div class="placeholder">${markHTML(g)}<div class="msg"><span class="ready">Ready player one</span><h3>${g.title}</h3><p>${g.description}</p><a class="btn go" href="${g.link}" target="_blank" rel="noopener">▶ Launch on Unity Play</a></div></div>`;
+    } else {
+      stage.innerHTML = `<div class="placeholder">${markHTML(g)}<div class="msg"><span class="ready">Coming soon</span><h3>${g.title}</h3><p>Add this game's Unity Play link (link) or WebGL path (buildUrl) in the games list.</p></div></div>`;
+    }
   }
   function openGame(i) { current = (i + games.length) % games.length; renderPlay(); openWin("win-play"); }
 
