@@ -296,20 +296,17 @@
        GitHub 的路徑，例如 "games/signal-lost/index.html"）。填了 buildUrl 就會優先嵌入。
      ================================================================ */
   const games = [
-  { id:"signal-lost", title:"你的遊戲名稱", genre:"遊戲類型",
-    description:"一兩句話介紹你的遊戲。",
+  { id:"signal-lost", title:"第一款遊戲名稱", genre:"遊戲類型",
+    description:"一兩句話介紹第一款遊戲。",
     controls:"WASD move · Mouse look", length:"3:25", progress:.45, accent:"#55f6ff", cover:"",
     buildUrl:"https://play.unity.com/api/v1/games/game/3b5548fe-5dbd-4676-8d86-8a83ae6c4951/build/latest/frame",
-    link:"https://play.unity.com/en/games/你的遊戲頁面" }
-    {id:"signal-lost", title:"你的遊戲名稱", genre:"遊戲類型",
-    description:"一兩句話介紹你的遊戲。",
-    controls:"WASD move · Mouse look", length:"3:25", progress:.45, accent:"#55f6ff", cover:"",
+    link:"" },
+  { id:"afterlight", title:"第二款遊戲名稱", genre:"遊戲類型",
+    description:"一兩句話介紹第二款遊戲。",
+    controls:"A/D move · Space jump", length:"4:10", progress:.3, accent:"#ff4fa3", cover:"",
     buildUrl:"https://play.unity.com/api/v1/games/game/3f91937c-d204-4a84-af56-8fa2dd34f339/build/latest/frame",
-    link:"https://play.unity.com/en/games/你的遊戲頁面" },
-    { id:"tiny-kingdoms", title:"Tiny Kingdoms", genre:"Strategy sandbox",
-      description:"Build a tiny civilization, balance its resources, and help it survive the changing seasons.",
-      controls:"Mouse select · Scroll zoom · R rotate", length:"5:42", progress:.6, accent:"#ffe45c", cover:"", buildUrl:"https://play.unity.com/api/v1/games/game/3b5548fe-5dbd-4676-8d86-8a83ae6c4951/build/latest/frame", link:"https://play.unity.com/api/v1/games/game/3b5548fe-5dbd-4676-8d86-8a83ae6c4951/build/latest/frame" }
-  ];
+    link:"" }
+];
 
   function markHTML(g) {
     if (g.id === "signal-lost") return `<div class="mark" aria-hidden="true"><span class="signal-orbit o1"></span><span class="signal-orbit o2"></span><span class="signal-orbit o3"></span><span class="signal-core" style="background:${g.accent};color:${g.accent}"></span></div>`;
